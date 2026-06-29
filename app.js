@@ -5,7 +5,7 @@
    ============================================================ */
 
 /* ============================================================
-   【真实模型接入点】★★★ 接入 claude-opus-4.8 只需改这里 ★★★
+   【真实模型接入点】★★★ 接入 DeepSeek 只需改这里 ★★★
    ------------------------------------------------------------
    默认 MODE = 'mock'，使用本地高保真模拟引擎，无需密钥即可演示。
    拿到 Claude API Key 后：
@@ -17,7 +17,7 @@
    ============================================================ */
 const AI_CONFIG = {
   mode: 'api',                  // 'mock' | 'api' —— 已切换为真实模型代理
-  model: 'claude-opus-4.8',
+  model: 'deepseek-chat',
   endpoint: '/api/chat',        // EdgeOne 边缘函数代理地址（functions/api/chat.js）
   fallbackToMock: true,         // 代理不可用/未配置Key时，自动降级为本地模拟，保证不空屏
 };
@@ -40,7 +40,7 @@ async function streamOut(text, onToken, step = 1, delay = 14) {
 async function callAI(messages, systemPrompt, onToken) {
   if (AI_CONFIG.mode === 'api') {
     try {
-      // —— 真实模型分支（接入 claude-opus-4.8 的边缘函数代理）——
+      // —— 真实模型分支（接入 DeepSeek 的边缘函数代理）——
       const res = await fetch(AI_CONFIG.endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -102,7 +102,7 @@ const State = {
 
 function buildSystemPrompt() {
   const p = State.profile, a = State.assess;
-  let ctx = '你是 ATLAS，一名顶级的 AI 职业规划顾问，由 claude-opus-4.8 驱动。回答专业、结构化、有同理心，给出可执行建议。';
+  let ctx = '你是 ATLAS，一名顶级的 AI 职业规划顾问，由 DeepSeek 驱动。回答专业、结构化、有同理心，给出可执行建议。';
   const bits = [];
   if (p.name) bits.push(`姓名:${p.name}`);
   if (p.age) bits.push(`年龄段:${p.age}`);
@@ -376,7 +376,7 @@ function initChat() {
 }
 function greeting() {
   const n = State.profile.name ? State.profile.name + '，' : '';
-  return `你好${n}我是 **ATLAS**，由 claude-opus-4.8 驱动的职业规划顾问。\n\n我已${State.profile.role || State.assess ? '结合你的背景档案与测评结果，' : ''}准备好为你提供职业咨询。你可以问我关于**能力补强、方向选择、晋升路径、转行风险**等任何问题——或点击左侧的快捷提问开始。`;
+  return `你好${n}我是 **ATLAS**，由 DeepSeek 驱动的职业规划顾问。\n\n我已${State.profile.role || State.assess ? '结合你的背景档案与测评结果，' : ''}准备好为你提供职业咨询。你可以问我关于**能力补强、方向选择、晋升路径、转行风险**等任何问题——或点击左侧的快捷提问开始。`;
 }
 function pushMsg(role, content, returnBody) {
   const stream = $('#chatStream');
@@ -413,7 +413,7 @@ function openReport() {
   $('#reportBody').innerHTML = `
     <div class="report" id="reportPrintable">
       <h3>${escapeHTML(p.name || '我')}的职业规划报告</h3>
-      <div class="report__meta">ATLAS · claude-opus-4.8 生成 · ${now}</div>
+      <div class="report__meta">ATLAS · DeepSeek 生成 · ${now}</div>
       <section><h4>个人画像</h4>
         <p>${[p.age, p.education, p.major, p.role, p.years].filter(Boolean).join(' · ') || '（未填写完整档案）'}</p>
         ${p.skills ? `<p>核心技能：${escapeHTML(p.skills)}</p>` : ''}

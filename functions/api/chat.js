@@ -1,22 +1,27 @@
 /* ============================================================
-   EdgeOne Pages 边缘函数 · Claude 代理
+   Cloudflare Pages Functions · DeepSeek 代理
    ------------------------------------------------------------
    路由：自动映射到  /api/chat
-   作用：作为前端与 Anthropic 官方 API 之间的安全代理。
+   作用：作为前端与 DeepSeek API 之间的安全代理。
         真实 API Key 只存在这里（通过环境变量读取），
         前端永远拿不到，避免被扒源码盗刷。
    ------------------------------------------------------------
    【你需要做的唯一一件事】
-   在 EdgeOne Pages 控制台 → 项目 → 设置 → 环境变量，新增：
-       变量名：ANTHROPIC_API_KEY
-       值    ：你的 Anthropic API Key（sk-ant-...）
-   （可选）ANTHROPIC_MODEL = claude-opus-4.8   不填则用默认值
-   配好后重新部署即可生效。
+   在 Cloudflare Pages 控制台 → 你的项目 → Settings →
+   Environment variables（环境变量）中新增：
+       变量名：DEEPSEEK_API_KEY
+       值    ：你的 DeepSeek API Key（sk-...）
+   （可选）DEEPSEEK_MODEL = deepseek-chat   不填则用默认值
+   配好后重新部署（或触发一次 retry deployment）即可生效。
+   ------------------------------------------------------------
+   说明：DeepSeek 使用 OpenAI 兼容格式。
+        - deepseek-chat     ：通用对话（推荐，速度快、便宜）
+        - deepseek-reasoner ：深度推理（更强但更慢更贵）
    ============================================================ */
 
-const ANTHROPIC_URL = 'https://api.anthropic.com/v1/messages';
-const DEFAULT_MODEL = 'claude-opus-4.8';
-const MAX_TOKENS = 1500;
+const DEEPSEEK_URL = 'https://api.deepseek.com/v1/chat/completions';
+const DEFAULT_MODEL = 'deepseek-chat';
+const MAX_TOKENS = 2000;
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -41,10 +46,10 @@ export async function onRequest({ request, env }) {
   }
 
   // 读取密钥（环境变量）
-  const apiKey = env.ANTHROPIC_API_KEY;
+  const apiKey = env.DEEPSEEK_API_KEY;
   if (!apiKey) {
     return json({
-      reply: '⚠️ 服务端尚未配置 API Key。请在 EdgeOne 控制台为项目添加环境变量 ANTHROPIC_API_KEY 后重新部署。',
+      reply: '⚠️ 服务端尚未配置 API Key。请在 Cloudflare Pages 控制台为项目添加环境变量 DEEPSEEK_API_KEY 后重新部署。',
       error: 'missing_api_key',
     }, 200);
   }
@@ -59,35 +64,38 @@ export async function onRequest({ request, env }) {
 
   const system = typeof payload.system === 'string' ? payload.system : '';
   const rawMessages = Array.isArray(payload.messages) ? payload.messages : [];
-  const model = payload.model || env.ANTHROPIC_MODEL || DEFAULT_MODEL;
+  const model = env.DEEPSEEK_MODEL || DEFAULT_MODEL;
 
-  // 规整为 Anthropic 官方 messages 格式：只保留 user / assistant，内容转字符串
-  const messages = rawMessages
-    .filter(m => m && (m.role === 'user' || m.role === 'assistant') && m.content)
-    .map(m => ({ role: m.role, content: String(m.content) }));
+  // 规整为 OpenAI 兼容 messages 格式
+  const chatMessages = [];
+  if (system) chatMessages.push({ role: 'system', content: system });
+  for (const m of rawMessages) {
+    if (m && (m.role === 'user' || m.role === 'assistant') && m.content) {
+      chatMessages.push({ role: m.role, content: String(m.content) });
+    }
+  }
 
-  if (messages.length === 0) {
+  if (chatMessages.filter(m => m.role !== 'system').length === 0) {
     return json({ error: '没有可用的对话内容。' }, 400);
   }
 
-  // 调用 Anthropic 官方 API
+  // 调用 DeepSeek API
   try {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 55000); // 55s 超时保护
 
-    const upstream = await fetch(ANTHROPIC_URL, {
+    const upstream = await fetch(DEEPSEEK_URL, {
       method: 'POST',
       signal: controller.signal,
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
+        'Authorization': `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
         model,
         max_tokens: MAX_TOKENS,
-        system: system || undefined,
-        messages,
+        temperature: 0.7,
+        messages: chatMessages,
       }),
     });
     clearTimeout(timer);
@@ -99,9 +107,9 @@ export async function onRequest({ request, env }) {
       return json({ reply: `调用模型出错：${msg}`, error: 'upstream_error', status: upstream.status }, 200);
     }
 
-    // 提取文本回复
-    const reply = Array.isArray(data.content)
-      ? data.content.filter(c => c.type === 'text').map(c => c.text).join('\n').trim()
+    // 提取文本回复（OpenAI 兼容格式）
+    const reply = (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content)
+      ? String(data.choices[0].message.content).trim()
       : '';
 
     return json({
