@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="description" content="ATLAS · AI 职业规划助手 — 由 claude-opus-4.8 驱动的端到端职业咨询" />
+<title>ATLAS · AI 职业规划助手</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<!-- 背景层 -->
+<div class="bg-grid" aria-hidden="true"></div>
+<div class="bg-glow bg-glow--1" aria-hidden="true"></div>
+<div class="bg-glow bg-glow--2" aria-hidden="true"></div>
+<canvas id="particles" class="bg-particles" aria-hidden="true"></canvas>
+
+<!-- 顶部导航 -->
+<header class="nav">
+  <div class="nav__inner">
+    <a class="brand" href="#home">
+      <span class="brand__mark">
+        <svg viewBox="0 0 32 32" width="26" height="26" fill="none">
+          <path d="M16 2 L29 9 V23 L16 30 L3 23 V9 Z" stroke="currentColor" stroke-width="1.4" opacity=".5"/>
+          <path d="M16 8 L23 12 V20 L16 24 L9 20 V12 Z" stroke="currentColor" stroke-width="1.6"/>
+          <circle cx="16" cy="16" r="2.2" fill="currentColor"/>
+        </svg>
+      </span>
+      <span class="brand__text">ATLAS<span class="brand__dot">.</span></span>
+    </a>
+    <nav class="nav__links">
+      <a href="#home" data-nav>首页</a>
+      <a href="#profile" data-nav>背景档案</a>
+      <a href="#assess" data-nav>职业测评</a>
+      <a href="#path" data-nav>路径图谱</a>
+      <a href="#chat" data-nav>AI 咨询</a>
+    </nav>
+    <div class="nav__right">
+      <span class="model-badge" title="当前驱动模型">
+        <span class="dot"></span> claude-opus-4.8
+      </span>
+      <button class="btn btn--ghost btn--sm" id="navStartBtn">开始咨询</button>
+    </div>
+    <button class="nav__burger" id="burger" aria-label="菜单"><span></span><span></span><span></span></button>
+  </div>
+</header>
+
+<main>
+<!-- HERO -->
+<section class="hero" id="home">
+  <div class="hero__inner">
+    <div class="tag-pill">
+      <span class="tag-pill__dot"></span> 端到端 AI 职业规划 · 实时智能咨询
+    </div>
+    <h1 class="hero__title">
+      用一次对话，<br/>
+      看清你<span class="grad-text">未来十年</span>的职业坐标
+    </h1>
+    <p class="hero__sub">
+      ATLAS 由 <b>claude-opus-4.8</b> 驱动，融合背景建模、职业测评、路径图谱与可导出报告，
+      为你提供从认知到决策的全链路职业咨询。
+    </p>
+    <div class="hero__actions">
+      <button class="btn btn--primary" data-goto="chat">
+        立即开始咨询
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <button class="btn btn--ghost" data-goto="profile">填写背景档案</button>
+    </div>
+    <div class="hero__stats">
+      <div class="stat"><div class="stat__num" data-count="14">0</div><div class="stat__label">职业测评维度</div></div>
+      <div class="stat"><div class="stat__num" data-count="60" data-suffix="+">0</div><div class="stat__label">覆盖职业方向</div></div>
+      <div class="stat"><div class="stat__num" data-count="100" data-suffix="%">0</div><div class="stat__label">个性化定制</div></div>
+    </div>
+  </div>
+  <div class="hero__visual">
+    <div class="orb-card glass">
+      <div class="orb-card__head">
+        <span class="live-dot"></span> 实时咨询会话
+      </div>
+      <div class="orb-msg orb-msg--ai"><span>你目前的核心优势在系统设计与跨团队协作，建议向技术管理或架构方向纵深。</span></div>
+      <div class="orb-msg orb-msg--user"><span>那我需要补哪些能力？</span></div>
+      <div class="orb-msg orb-msg--ai orb-typing"><span class="d"></span><span class="d"></span><span class="d"></span></div>
+    </div>
+  </div>
+</section>
+
+<!-- 功能特性 -->
+<section class="features">
+  <div class="section-head">
+    <span class="section-kicker">END-TO-END</span>
+    <h2 class="section-title">一站式职业规划工作台</h2>
+    <p class="section-desc">四大模块环环相扣，从了解你、评估你，到为你绘制路径、生成可落地的行动报告。</p>
+  </div>
+  <div class="feature-grid">
+    <article class="feature-card glass" data-goto="profile">
+      <div class="feature-card__icon">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M4 19v-1a4 4 0 0 1 4-4h2M15 7a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" stroke="currentColor" stroke-width="1.5"/><path d="M14 13h6M14 16h6M14 19h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      </div>
+      <h3>背景档案建模</h3>
+      <p>结构化采集你的学历、经历、技能与目标，构建专属画像，让每一句建议都贴合你本人。</p>
+      <span class="feature-card__go">进入 →</span>
+    </article>
+    <article class="feature-card glass" data-goto="assess">
+      <div class="feature-card__icon">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M3 12h4l2 6 4-12 2 6h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <h3>职业倾向测评</h3>
+      <p>14 维度科学测评，量化你的兴趣、性格与能力倾向，生成可视化的职业适配雷达。</p>
+      <span class="feature-card__go">开始测评 →</span>
+    </article>
+    <article class="feature-card glass" data-goto="path">
+      <div class="feature-card__icon">
+        <svg viewBox="0 0 24 24" fill="none"><circle cx="5" cy="6" r="2" stroke="currentColor" stroke-width="1.5"/><circle cx="5" cy="18" r="2" stroke="currentColor" stroke-width="1.5"/><circle cx="19" cy="12" r="2" stroke="currentColor" stroke-width="1.5"/><path d="M7 6h6a4 4 0 0 1 4 4M7 18h6a4 4 0 0 0 4-4" stroke="currentColor" stroke-width="1.5"/></svg>
+      </div>
+      <h3>职业路径图谱</h3>
+      <p>自动绘制 3 阶段发展路线与技能图谱，把"该往哪走"变成一张看得见的地图。</p>
+      <span class="feature-card__go">查看图谱 →</span>
+    </article>
+    <article class="feature-card glass" data-goto="chat">
+      <div class="feature-card__icon">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-5.2A8 8 0 1 1 21 12Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+      </div>
+      <h3>AI 实时咨询</h3>
+      <p>由 claude-opus-4.8 驱动的职业规划师，结合你的全部档案，随时深度对话答疑。</p>
+      <span class="feature-card__go">开始对话 →</span>
+    </article>
+  </div>
+</section>
+
+<!-- 背景档案 -->
+<section class="panel" id="profile">
+  <div class="section-head">
+    <span class="section-kicker">STEP 01</span>
+    <h2 class="section-title">建立你的背景档案</h2>
+    <p class="section-desc">信息越完整，AI 的咨询越精准。所有数据仅保存在你本地浏览器，不会上传。</p>
+  </div>
+  <div class="profile-wrap glass">
+    <form id="profileForm" class="profile-form">
+      <div class="form-row">
+        <label class="field"><span>姓名 / 昵称</span><input name="name" type="text" placeholder="如：林然" /></label>
+        <label class="field"><span>年龄段</span>
+          <select name="age"><option value="">请选择</option><option>18-22 在校</option><option>23-28 职场新人</option><option>29-35 中坚骨干</option><option>36-45 资深/管理</option><option>45+ 转型期</option></select>
+        </label>
+      </div>
+      <div class="form-row">
+        <label class="field"><span>最高学历</span>
+          <select name="education"><option value="">请选择</option><option>高中/中专</option><option>大专</option><option>本科</option><option>硕士</option><option>博士</option></select>
+        </label>
+        <label class="field"><span>所学专业</span><input name="major" type="text" placeholder="如：计算机科学" /></label>
+      </div>
+      <div class="form-row">
+        <label class="field"><span>当前职位 / 状态</span><input name="role" type="text" placeholder="如：后端工程师 / 应届求职中" /></label>
+        <label class="field"><span>工作年限</span>
+          <select name="years"><option value="">请选择</option><option>应届/0 年</option><option>1-3 年</option><option>3-5 年</option><option>5-10 年</option><option>10 年以上</option></select>
+        </label>
+      </div>
+      <label class="field"><span>核心技能（用逗号分隔）</span><input name="skills" type="text" placeholder="如：Java, 系统设计, 项目管理, 英语" /></label>
+      <label class="field"><span>职业目标 / 困惑</span><textarea name="goal" rows="3" placeholder="如：想从开发转向技术管理，但不确定要补哪些能力，也担心年龄……"></textarea></label>
+      <div class="profile-actions">
+        <button type="button" class="btn btn--ghost btn--sm" id="profileClear">清空</button>
+        <button type="submit" class="btn btn--primary btn--sm">保存档案 &amp; 用于咨询</button>
+      </div>
+      <div class="profile-saved" id="profileSaved" hidden>✓ 档案已保存，AI 咨询将自动结合这些信息。</div>
+    </form>
+  </div>
+</section>
+
+<!-- 职业测评 -->
+<section class="panel" id="assess">
+  <div class="section-head">
+    <span class="section-kicker">STEP 02</span>
+    <h2 class="section-title">职业倾向测评</h2>
+    <p class="section-desc">14 道题，约 2 分钟。基于霍兰德兴趣模型 + 能力自评，生成你的职业适配画像。</p>
+  </div>
+  <div class="assess-wrap glass">
+    <div class="assess-progress"><div class="assess-progress__bar" id="assessBar"></div></div>
+    <div id="assessBody" class="assess-body"></div>
+    <div id="assessResult" class="assess-result" hidden>
+      <h3 class="assess-result__title">你的职业适配画像</h3>
+      <div class="assess-result__grid">
+        <div class="radar-box"><canvas id="radarChart" width="360" height="360"></canvas></div>
+        <div class="assess-result__text" id="assessText"></div>
+      </div>
+      <div class="assess-result__actions">
+        <button class="btn btn--ghost btn--sm" id="assessRetry">重新测评</button>
+        <button class="btn btn--primary btn--sm" data-goto="chat">就结果咨询 AI →</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 路径图谱 -->
+<section class="panel" id="path">
+  <div class="section-head">
+    <span class="section-kicker">STEP 03</span>
+    <h2 class="section-title">职业路径图谱</h2>
+    <p class="section-desc">根据你的档案与测评，生成三阶段发展路线与关键能力图谱。</p>
+  </div>
+  <div class="path-wrap glass">
+    <div class="path-toolbar">
+      <input id="pathInput" type="text" placeholder="输入目标职业方向，如：技术管理 / 数据科学 / 产品经理" />
+      <button class="btn btn--primary btn--sm" id="pathGen">生成图谱</button>
+    </div>
+    <div id="pathCanvas" class="path-canvas">
+      <div class="path-empty">填写目标方向并点击生成，AI 将为你绘制发展路线图。</div>
+    </div>
+  </div>
+</section>
+
+<!-- AI 咨询 -->
+<section class="panel" id="chat">
+  <div class="section-head">
+    <span class="section-kicker">STEP 04</span>
+    <h2 class="section-title">与 AI 职业规划师对话</h2>
+    <p class="section-desc">由 claude-opus-4.8 驱动，已结合你的档案、测评与路径，随时深入追问。</p>
+  </div>
+  <div class="chat-wrap glass">
+    <div class="chat-side">
+      <div class="chat-side__title">快捷提问</div>
+      <button class="chip" data-quick="基于我的背景，我现在最该补强的三项能力是什么？">最该补强的能力</button>
+      <button class="chip" data-quick="结合我的测评结果，有哪些适合我的职业方向？">适合我的方向</button>
+      <button class="chip" data-quick="如果想在两年内晋升，我应该制定怎样的行动计划？">两年晋升计划</button>
+      <button class="chip" data-quick="我担心年龄/转行风险，该如何理性评估和应对？">转行风险评估</button>
+      <button class="chip" data-quick="帮我把目前的职业规划总结成一份可执行清单。">生成行动清单</button>
+      <div class="chat-side__ctx" id="chatCtx"></div>
+    </div>
+    <div class="chat-main">
+      <div class="chat-stream" id="chatStream"></div>
+      <div class="chat-input">
+        <textarea id="chatText" rows="1" placeholder="输入你的职业困惑，回车发送，Shift+Enter 换行…"></textarea>
+        <button class="chat-send" id="chatSend" aria-label="发送">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none"><path d="M4 12l16-8-6 16-3-7-7-1Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+      <div class="chat-foot">
+        <button class="btn btn--ghost btn--sm" id="exportBtn">导出规划报告</button>
+        <span class="chat-foot__note">演示版回复由高保真本地引擎生成；接入真实 claude-opus-4.8 仅需配置一处密钥。</span>
+      </div>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer class="footer">
+  <div class="footer__inner">
+    <span class="brand__text">ATLAS<span class="brand__dot">.</span></span>
+    <p>端到端 AI 职业规划助手 · Powered by claude-opus-4.8</p>
+    <p class="footer__fine">本站为演示部署，所有数据仅存于你本地浏览器。</p>
+  </div>
+</footer>
+
+<!-- 报告导出弹层 -->
+<div class="modal" id="reportModal" hidden>
+  <div class="modal__mask" data-close></div>
+  <div class="modal__card glass">
+    <div class="modal__head">
+      <h3>职业规划报告</h3>
+      <button class="modal__x" data-close aria-label="关闭">×</button>
+    </div>
+    <div class="modal__body" id="reportBody"></div>
+    <div class="modal__foot">
+      <button class="btn btn--ghost btn--sm" data-close>关闭</button>
+      <button class="btn btn--primary btn--sm" id="reportDownload">下载为图片</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast" hidden></div>
+
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
