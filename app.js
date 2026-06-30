@@ -22,6 +22,27 @@ const AI_CONFIG = {
   fallbackToMock: true,         // 代理不可用/未配置Key时，自动降级为本地模拟，保证不空屏
 };
 
+/* ============================================================
+   【真实使用统计】上报埋点
+   ------------------------------------------------------------
+   每个真实行为都会异步上报到 /api/track（存入 Cloudflare KV）。
+   失败静默，绝不阻塞页面体验。看板页 dashboard.html 读取 /api/stats。
+   ============================================================ */
+function track(event, meta) {
+  try {
+    // 给每个访客一个稳定的匿名ID（仅存本地，用于区分"独立访客"，不含任何隐私）
+    let vid = localStorage.getItem('atlas_vid');
+    if (!vid) { vid = 'v' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8); localStorage.setItem('atlas_vid', vid); }
+    const body = JSON.stringify({ event, vid, meta: meta || {}, ts: Date.now() });
+    // 优先用 sendBeacon（页面关闭也能发出），否则降级 fetch
+    if (navigator.sendBeacon) {
+      navigator.sendBeacon('/api/track', new Blob([body], { type: 'application/json' }));
+    } else {
+      fetch('/api/track', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body, keepalive: true }).catch(() => {});
+    }
+  } catch (e) { /* 静默 */ }
+}
+
 /**
  * 统一的 AI 调用入口。其它模块只调用这个函数。
  * @param {Array<{role:string,content:string}>} messages 完整对话历史
@@ -199,6 +220,7 @@ function initProfile() {
     State.profile = data; store.set('profile', data);
     $('#profileSaved').hidden = false;
     renderChatCtx(); toast('档案已保存，AI 咨询已结合你的信息');
+    track('profile_save', { role: data.role || '', years: data.years || '' });   // 档案保存
   });
   $('#profileClear').addEventListener('click', () => { form.reset(); State.profile = {}; store.set('profile', {}); $('#profileSaved').hidden = true; renderChatCtx(); });
 }
@@ -258,6 +280,7 @@ function finishAssess() {
   const result = { score: assessScore, top: sorted.slice(0, 3), all: sorted };
   State.assess = result; store.set('assess', result);
   renderAssessResult(result); renderChatCtx();
+  track('assess_done', { type: result.top.map(t => t.k).join(''), top1: result.top[0].k });   // 测评完成 + 类型分布
 }
 function renderAssessResult(result) {
   $('#assessBody').hidden = true;
@@ -308,6 +331,7 @@ function genPath() {
   const data = MockEngine.buildPath(goal, State.profile, State.assess);
   State.path = data; store.set('path', data);
   renderPath(data); toast('路径图谱已生成');
+  track('path_gen', { goal: goal.slice(0, 40) });   // 路径生成
 }
 function renderPath(data) {
   const el = $('#pathCanvas');
@@ -359,6 +383,7 @@ function initChat() {
     pushMsg('user', val);
     chatHistory.push({ role: 'user', content: val });
     chatBusy = true; send.disabled = true;
+    track('ai_chat', { q: val.slice(0, 120) });   // AI 咨询：记录用户提问
 
     // AI 流式回复
     const bodyEl = pushMsg('ai', '', true);
@@ -407,6 +432,7 @@ function initReport() {
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('#reportModal').hidden) closeReport(); });
 }
 function openReport() {
+  track('report_export');   // 报告导出
   const p = State.profile, a = State.assess, path = State.path;
   const now = new Date().toLocaleDateString('zh-CN');
   const top = a && a.top;
@@ -527,4 +553,5 @@ window.addEventListener('DOMContentLoaded', () => {
   initPath();
   initChat();
   initReport();
+  track('pageview');   // 页面打开：真实访问上报
 });
