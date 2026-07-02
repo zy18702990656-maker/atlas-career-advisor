@@ -48,16 +48,20 @@ async function kvGetJSON(kv, key, def) {
 
 // 把 referrer 归类成「渠道」——中文可读
 function classifySource(ref, utm) {
-  const u = String(utm || '').toLowerCase();
+  const raw = String(utm || '').trim();
+  const u = raw.toLowerCase();
   // 优先用你自己带的推广标记（最准）
-  if (u) {
-    if (/(weixin|wechat|wx|moments|朋友圈|微信)/.test(u)) return '微信/朋友圈';
+  if (raw) {
+    // 中文渠道名（来自 enter.html 落地页选择）直接原样保留，最干净
+    if (/[\u4e00-\u9fa5]/.test(raw)) return raw.slice(0, 16);
+    // 英文标记做一次归一映射
+    if (/(weixin|wechat|wx|moments|pyq)/.test(u)) return '微信';
     if (/(qq|qzone)/.test(u)) return 'QQ';
-    if (/(weibo|微博)/.test(u)) return '微博';
-    if (/(douyin|抖音|tiktok)/.test(u)) return '抖音';
-    if (/(xhs|xiaohongshu|小红书|red)/.test(u)) return '小红书';
-    if (/(zhihu|知乎)/.test(u)) return '知乎';
-    if (/(bili|b站)/.test(u)) return 'B站';
+    if (/(weibo)/.test(u)) return '微博';
+    if (/(douyin|tiktok)/.test(u)) return '抖音';
+    if (/(xhs|xiaohongshu|red)/.test(u)) return '小红书';
+    if (/(zhihu)/.test(u)) return '知乎';
+    if (/(bili)/.test(u)) return 'B站';
     return '推广:' + u.slice(0, 16);
   }
   const r = String(ref || '').toLowerCase();
