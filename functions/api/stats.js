@@ -73,8 +73,19 @@ export async function onRequest({ request, env }) {
   // 最近真实提问
   const recentQ = await kvGetJSON(kv, 'recent_q', []);
 
+  // 访客来源画像（来源渠道 / 设备 / 地区），按数量降序、各取前若干
+  const dims = await kvGetJSON(kv, 'dims', { source: {}, device: {}, country: {} });
+  const topN = (obj, n) => Object.entries(obj || {})
+    .sort((a, b) => b[1] - a[1]).slice(0, n)
+    .reduce((o, [k, v]) => (o[k] = v, o), {});
+
   return json({
     ok: true,
+    dims: {
+      source: topN(dims.source, 10),
+      device: topN(dims.device, 8),
+      country: topN(dims.country, 8),
+    },
     updatedAt: new Date(Date.now() + 8 * 3600 * 1000).toISOString().replace('T', ' ').slice(0, 19) + ' (北京时间)',
     total: {
       uv: counters.total_uv || 0,

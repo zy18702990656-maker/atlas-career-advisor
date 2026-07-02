@@ -129,6 +129,23 @@
     </div>
   </div>
 
+  <!-- 访客来源画像 -->
+  <div class="sec">访客都是谁 · 从哪来</div>
+  <div class="grid g3">
+    <div class="card">
+      <div style="font-size:.9rem;color:var(--text-2);margin-bottom:.7rem;font-weight:600">来源渠道 <span style="color:var(--text-3);font-weight:400;font-size:.78rem">（从哪点进来）</span></div>
+      <div id="srcBars"><div class="skel">加载中…</div></div>
+    </div>
+    <div class="card">
+      <div style="font-size:.9rem;color:var(--text-2);margin-bottom:.7rem;font-weight:600">访问设备</div>
+      <div id="devBars"><div class="skel">加载中…</div></div>
+    </div>
+    <div class="card">
+      <div style="font-size:.9rem;color:var(--text-2);margin-bottom:.7rem;font-weight:600">访客地区</div>
+      <div id="geoBars"><div class="skel">加载中…</div></div>
+    </div>
+  </div>
+
   <!-- 测评分布 + 最近提问 -->
   <div class="grid g2" style="margin-top:1.4rem">
     <div class="card">
@@ -241,6 +258,12 @@ async function load(){
 
     // RIASEC
     renderBars($('#riasecBars'), d.riasec, RIASEC_NAME);
+
+    // 访客来源画像（key 已是中文，直接展示）
+    const dims = d.dims || { source:{}, device:{}, country:{} };
+    renderBars($('#srcBars'), dims.source, {});
+    renderBars($('#devBars'), dims.device, {});
+    renderBars($('#geoBars'), dims.country, {});
 
     // 最近提问
     renderRecentQ(d.recentQ);

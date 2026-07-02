@@ -46,6 +46,65 @@ async function kvGetJSON(kv, key, def) {
   }
 }
 
+// 把 referrer 归类成「渠道」——中文可读
+function classifySource(ref, utm) {
+  const u = String(utm || '').toLowerCase();
+  // 优先用你自己带的推广标记（最准）
+  if (u) {
+    if (/(weixin|wechat|wx|moments|朋友圈|微信)/.test(u)) return '微信/朋友圈';
+    if (/(qq|qzone)/.test(u)) return 'QQ';
+    if (/(weibo|微博)/.test(u)) return '微博';
+    if (/(douyin|抖音|tiktok)/.test(u)) return '抖音';
+    if (/(xhs|xiaohongshu|小红书|red)/.test(u)) return '小红书';
+    if (/(zhihu|知乎)/.test(u)) return '知乎';
+    if (/(bili|b站)/.test(u)) return 'B站';
+    return '推广:' + u.slice(0, 16);
+  }
+  const r = String(ref || '').toLowerCase();
+  if (!r) return '直接访问';                                    // 直接输网址/收藏夹/APP内点开
+  if (/mp\.weixin|weixin|wechat|servicewechat/.test(r)) return '微信';
+  if (/qq\.com|qzone/.test(r)) return 'QQ';
+  if (/weibo\./.test(r)) return '微博';
+  if (/zhihu\./.test(r)) return '知乎';
+  if (/xiaohongshu|xhslink/.test(r)) return '小红书';
+  if (/douyin|tiktok/.test(r)) return '抖音';
+  if (/bilibili|b23\.tv/.test(r)) return 'B站';
+  if (/baidu\./.test(r)) return '百度搜索';
+  if (/google\./.test(r)) return '谷歌搜索';
+  if (/bing\./.test(r)) return '必应搜索';
+  if (/so\.com|sogou/.test(r)) return '360/搜狗';
+  if (/github\./.test(r)) return 'GitHub';
+  // 其它站点：取域名
+  try { return '其它:' + new URL(ref).hostname.replace(/^www\./, '').slice(0, 20); } catch { return '其它站点'; }
+}
+
+// 从 User-Agent 粗略判断设备类型
+function classifyDevice(ua) {
+  const s = String(ua || '').toLowerCase();
+  if (/micromessenger/.test(s)) return '微信内浏览器';
+  if (/ipad|tablet/.test(s)) return '平板';
+  if (/iphone|ios/.test(s)) return 'iPhone';
+  if (/android/.test(s)) return 'Android手机';
+  if (/windows/.test(s)) return 'Windows电脑';
+  if (/macintosh|mac os/.test(s)) return 'Mac电脑';
+  if (/linux/.test(s)) return 'Linux电脑';
+  if (/mobile/.test(s)) return '其它手机';
+  return '其它设备';
+}
+
+// 国家码 → 中文（覆盖常见地区，其余显示原码）
+const COUNTRY_CN = {
+  CN: '中国', HK: '中国香港', TW: '中国台湾', MO: '中国澳门',
+  US: '美国', JP: '日本', KR: '韩国', SG: '新加坡', GB: '英国',
+  DE: '德国', FR: '法国', CA: '加拿大', AU: '澳大利亚', IN: '印度',
+};
+function countryCN(code) {
+  const c = String(code || '').toUpperCase();
+  if (!c || c === 'T1' || c === 'XX') return '未知';
+  return COUNTRY_CN[c] || c;
+}
+function inc(obj, key) { if (!key) return; obj[key] = (obj[key] || 0) + 1; }
+
 export async function onRequest({ request, env }) {
   if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: CORS });
   if (request.method !== 'POST') return json({ ok: false, error: 'method' }, 405);
@@ -86,6 +145,17 @@ export async function onRequest({ request, env }) {
         dayData.visitors[vid] = 1;
         dayData.uv += 1;
         firstSeenToday = true;
+      }
+      // ---- 访客来源画像（仅按「新访客」统计一次，反映真实来源分布）----
+      if (firstSeenToday) {
+        const source = classifySource(meta.ref, meta.utm);
+        const device = classifyDevice(request.headers.get('user-agent'));
+        const country = countryCN(request.cf && request.cf.country);
+        const dims = await kvGetJSON(kv, 'dims', { source: {}, device: {}, country: {} });
+        inc(dims.source, source);
+        inc(dims.device, device);
+        inc(dims.country, country);
+        try { await kv.put('dims', JSON.stringify(dims)); } catch {}
       }
       break;
     }

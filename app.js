@@ -33,7 +33,16 @@ function track(event, meta) {
     // 给每个访客一个稳定的匿名ID（仅存本地，用于区分"独立访客"，不含任何隐私）
     let vid = localStorage.getItem('atlas_vid');
     if (!vid) { vid = 'v' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8); localStorage.setItem('atlas_vid', vid); }
-    const body = JSON.stringify({ event, vid, meta: meta || {}, ts: Date.now() });
+    const m = meta || {};
+    // 仅在页面打开时附带「来源渠道」信息，供看板分析访客从哪来
+    if (event === 'pageview') {
+      try {
+        m.ref = document.referrer || '';                              // 来路页面（从哪个网站点进来）
+        const p = new URLSearchParams(location.search);
+        m.utm = p.get('from') || p.get('utm_source') || p.get('src') || ''; // 你发链接时带的推广标记
+      } catch (e) { /* 忽略 */ }
+    }
+    const body = JSON.stringify({ event, vid, meta: m, ts: Date.now() });
     // 优先用 sendBeacon（页面关闭也能发出），否则降级 fetch
     if (navigator.sendBeacon) {
       navigator.sendBeacon('/api/track', new Blob([body], { type: 'application/json' }));
@@ -42,6 +51,7 @@ function track(event, meta) {
     }
   } catch (e) { /* 静默 */ }
 }
+window.track = track;  // 暴露给付费模块埋点使用
 
 /**
  * 统一的 AI 调用入口。其它模块只调用这个函数。
@@ -379,6 +389,16 @@ function initChat() {
   async function doSend() {
     const val = text.value.trim();
     if (!val || chatBusy) return;
+    // 免费对话轮数限制：超过后需付费解锁
+    if (window.__PAY__ && !window.__PAY__.isPaid()) {
+      const used = +(store.get('chat_used') || 0);
+      if (used >= window.__PAY__.freeRounds) {
+        pushMsg('ai', `你已用完 **${window.__PAY__.freeRounds} 次**免费咨询。解锁完整版（¥${window.__PAY__.price}）即可**无限次**深度对话，并获得完整报告与路径图谱。`, false);
+        window.__PAY__.open();
+        return;
+      }
+      store.set('chat_used', used + 1);
+    }
     text.value = ''; auto();
     pushMsg('user', val);
     chatHistory.push({ role: 'user', content: val });
@@ -425,7 +445,11 @@ function renderChatCtx() {
    ============================================================ */
 function closeReport() { $('#reportModal').hidden = true; }
 function initReport() {
-  $('#exportBtn').addEventListener('click', openReport);
+  // 导出报告 = 付费点：未付费先弹支付，支付成功后再打开报告
+  $('#exportBtn').addEventListener('click', () => {
+    if (window.__PAY__) window.__PAY__.require(openReport);
+    else openReport();
+  });
   $$('[data-close]').forEach(el => el.addEventListener('click', closeReport));
   $('#reportDownload').addEventListener('click', downloadReport);
   // ESC 关闭
