@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>渠道推广链接 · ATLAS</title>
+<style>
+  :root{
+    --bg:#07090d; --bg-2:#0b0e14; --surface:#0e121a;
+    --line:rgba(255,255,255,.08); --line-2:rgba(255,255,255,.14);
+    --text:#e8edf5; --text-2:#9aa6b8; --text-3:#5f6b7e;
+    --accent:#3ad6c8; --accent-2:#36b9f0;
+    --font:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;line-height:1.6;padding:1.6rem 1.2rem 3rem;
+    background-image:radial-gradient(900px 500px at 80% -10%,rgba(54,185,240,.08),transparent),
+                     linear-gradient(rgba(255,255,255,.022) 1px,transparent 1px),
+                     linear-gradient(90deg,rgba(255,255,255,.022) 1px,transparent 1px);
+    background-size:auto,42px 42px,42px 42px;}
+  .wrap{max-width:640px;margin:0 auto}
+  .brand{display:inline-flex;align-items:center;gap:.6rem;font-size:1.35rem;font-weight:800;letter-spacing:.05em}
+  .brand .mk{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;color:#04110f;
+    background:linear-gradient(120deg,var(--accent),var(--accent-2));font-weight:800;font-size:1rem}
+  .brand b{color:var(--accent)}
+  h1{font-size:1.15rem;font-weight:700;margin:1.2rem 0 .3rem}
+  .sub{color:var(--text-2);font-size:.9rem;margin-bottom:.2rem}
+  .sub b{color:var(--accent);font-weight:600}
+  .note{color:var(--text-3);font-size:.8rem;margin-bottom:1.4rem}
+  .list{display:flex;flex-direction:column;gap:.7rem}
+  .row{background:linear-gradient(180deg,var(--surface),var(--bg-2));border:1px solid var(--line);border-radius:14px;
+    padding:.85rem 1rem;display:flex;align-items:center;gap:.85rem;transition:.16s}
+  .row:hover{border-color:var(--line-2)}
+  .row .ic{width:30px;height:30px;flex-shrink:0}
+  .row .info{flex:1;min-width:0}
+  .row .nm{font-size:.95rem;font-weight:600;margin-bottom:.15rem}
+  .row .lk{font-size:.76rem;color:var(--text-3);font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .btn{flex-shrink:0;border:1px solid var(--accent);background:transparent;color:var(--accent);
+    border-radius:9px;padding:.42rem .85rem;font-size:.82rem;font-weight:600;cursor:pointer;transition:.16s;
+    font-family:var(--font);white-space:nowrap}
+  .btn:hover{background:rgba(58,214,200,.12)}
+  .btn.done{background:var(--accent);color:#04110f;border-color:var(--accent)}
+  .tips{margin-top:1.8rem;background:rgba(54,185,240,.06);border:1px solid rgba(54,185,240,.18);
+    border-radius:12px;padding:1rem 1.1rem}
+  .tips h2{font-size:.9rem;font-weight:600;color:var(--accent-2);margin-bottom:.5rem}
+  .tips p{font-size:.82rem;color:var(--text-2);margin:.3rem 0}
+  .tips code{background:rgba(255,255,255,.06);padding:.1rem .35rem;border-radius:5px;font-size:.78rem;
+    color:var(--accent);font-family:ui-monospace,Menlo,monospace}
+  .foot{margin-top:1.8rem;text-align:center;color:var(--text-3);font-size:.76rem}
+  .foot a{color:var(--text-3);border-bottom:1px dashed var(--line-2);text-decoration:none;padding-bottom:1px}
+  .foot a:hover{color:var(--accent)}
+  .toast{position:fixed;left:50%;bottom:2rem;transform:translateX(-50%) translateY(20px);
+    background:var(--accent);color:#04110f;padding:.6rem 1.2rem;border-radius:10px;font-size:.88rem;font-weight:600;
+    opacity:0;pointer-events:none;transition:.25s;z-index:99}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="brand"><span class="mk">A</span><span>ATL<b>A</b>S</span></div>
+    <h1>渠道推广链接</h1>
+    <div class="sub">要发到哪个渠道，就复制哪一条。链接里已经<b>自动标好来源</b>，访客点开无感知。</div>
+    <div class="note">来源在你复制的这一刻就确定了，访客无需做任何选择，看板 100% 准确归类。</div>
+
+    <div class="list" id="list"></div>
+
+    <div class="tips">
+      <h2>怎么用</h2>
+      <p>1. 找到你要发布的渠道（比如"朋友圈"），点右侧 <b>复制</b>。</p>
+      <p>2. 到对应平台粘贴发出去即可，链接会自动带上来源标记。</p>
+      <p>3. 回看板就能看到"哪个渠道来了多少人"，精确到每个渠道。</p>
+      <p style="margin-top:.6rem;color:var(--text-3)">想加新渠道？在链接里把 <code>from=</code> 后面换成任意名字即可，比如 <code>?from=同事群</code>。</p>
+    </div>
+
+    <div class="foot">
+      <a href="dashboard" target="_blank">查看数据看板 →</a>
+    </div>
+  </div>
+
+  <div class="toast" id="toast">已复制，去粘贴发布吧</div>
+
+<script>
+  var BASE = location.origin + '/index.html';
+  var CHANNELS = [
+    { key:'微信',    color:'#2dc100', path:'M8.5 3C4.9 3 2 5.4 2 8.4c0 1.7 1 3.2 2.5 4.2L4 15l2.6-1.4c.6.2 1.2.3 1.9.3h.5c-.1-.4-.2-.9-.2-1.3 0-2.8 2.7-5 6.1-5h.6C15 4.4 12 3 8.5 3zm-2.4 3.9c.4 0 .7.3.7.7s-.3.7-.7.7-.7-.3-.7-.7.3-.7.7-.7zm4.8 0c.4 0 .7.3.7.7s-.3.7-.7.7-.7-.3-.7-.7.3-.7.7-.7z M22 12.6c0-2.5-2.5-4.6-5.6-4.6s-5.6 2.1-5.6 4.6 2.5 4.6 5.6 4.6c.6 0 1.2-.1 1.8-.3l1.9 1-.5-1.7c1.4-.9 2.4-2.1 2.4-3.6zm-7.4-1c-.3 0-.6-.3-.6-.6s.3-.6.6-.6.6.3.6.6-.3.6-.6.6zm3.6 0c-.3 0-.6-.3-.6-.6s.3-.6.6-.6.6.3.6.6-.3.6-.6.6z' },
+    { key:'朋友圈',  color:'#3ad6c8', path:'M12 2a10 10 0 100 20 10 10 0 000-20zm0 3a2 2 0 110 4 2 2 0 010-4zm0 14a5 5 0 01-4.5-2.8c0-1.5 3-2.3 4.5-2.3s4.5.8 4.5 2.3A5 5 0 0112 19z' },
+    { key:'QQ',      color:'#12b7f5', path:'M12 2c3 0 5 2.4 5 5.4 0 1 .5 1.8 1 2.6.6.9 1.2 1.8 1.2 3.2 0 1-.4 1.8-.9 1.8-.4 0-.7-.4-1-1-.3.9-.9 1.7-1.6 2.3.6.2 1 .5 1 .9 0 .6-1.8 1.8-4.7 1.8s-4.7-1.2-4.7-1.8c0-.4.4-.7 1-.9-.7-.6-1.3-1.4-1.6-2.3-.3.6-.6 1-1 1-.5 0-.9-.8-.9-1.8 0-1.4.6-2.3 1.2-3.2.5-.8 1-1.6 1-2.6C7 4.4 9 2 12 2z' },
+    { key:'小红书',  color:'#ff2442', path:'M4 4h16v16H4V4zm3 4v8h2v-8H7zm4 0v8h2l2-8h-2l-1 4-1-4h-1z' },
+    { key:'抖音',    color:'#fe2c55', path:'M16 2c.3 1.8 1.4 3.3 3 3.9V9c-1.1 0-2.2-.4-3-1v5.5A5.5 5.5 0 118.5 8v3a2.5 2.5 0 102.5 2.5V2h5z' },
+    { key:'知乎',    color:'#0084ff', path:'M6 4h6v2H9.5c0 1-.1 2-.3 3H12l-.3 2H8.7c-.4 1.3-1 2.5-1.9 3.6L6 16l1.4-4H5V10h2.7c.2-1 .3-2 .3-3H6.5L6 4zm8 0h4v14h-2l-2 2v-2h-1V6h1V4z' },
+    { key:'B站',     color:'#fb7299', path:'M6 3l2 2h8l2-2 1 1-1.5 1.5H21v12a2 2 0 01-2 2H5a2 2 0 01-2-2V6h2.5L4 4.5 5 3zm2 7v3h1v-3H8zm7 0v3h1v-3h-1z' },
+    { key:'朋友推荐',color:'#f0b429', path:'M12 2l2.9 6 6.6.5-5 4.3 1.6 6.4L12 16l-6.1 3.7L7.5 13l-5-4.3L9.1 8 12 2z' },
+    { key:'简历/名片',color:'#8b5cf6', path:'M4 4h16v16H4V4zm2 2v12h12V6H6zm2 2h5v2H8V8zm0 3h8v1.5H8V11zm0 3h8v1.5H8V14z' }
+  ];
+
+  var list = document.getElementById('list');
+  var toast = document.getElementById('toast');
+
+  function buildURL(ch){ return BASE + '?from=' + encodeURIComponent(ch); }
+
+  CHANNELS.forEach(function(c){
+    var url = buildURL(c.key);
+    var row = document.createElement('div');
+    row.className = 'row';
+    row.innerHTML =
+      '<svg class="ic" viewBox="0 0 24 24" fill="'+c.color+'"><path d="'+c.path+'"/></svg>' +
+      '<div class="info"><div class="nm">'+c.key+'</div><div class="lk">'+url+'</div></div>' +
+      '<button class="btn" data-url="'+url+'">复制</button>';
+    list.appendChild(row);
+  });
+
+  function showToast(){ toast.classList.add('show'); setTimeout(function(){toast.classList.remove('show');},1600); }
+
+  function copyText(text, cb){
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(cb).catch(function(){ fallback(text,cb); });
+    } else { fallback(text,cb); }
+  }
+  function fallback(text, cb){
+    var ta=document.createElement('textarea');
+    ta.value=text; ta.style.position='fixed'; ta.style.opacity='0';
+    document.body.appendChild(ta); ta.focus(); ta.select();
+    try{ document.execCommand('copy'); }catch(e){}
+    document.body.removeChild(ta); cb&&cb();
+  }
+
+  list.addEventListener('click', function(e){
+    var btn = e.target.closest('.btn'); if(!btn) return;
+    var url = btn.getAttribute('data-url');
+    copyText(url, function(){
+      var old = btn.textContent;
+      btn.textContent = '已复制'; btn.classList.add('done');
+      showToast();
+      setTimeout(function(){ btn.textContent = old; btn.classList.remove('done'); }, 1600);
+    });
+  });
+</script>
+</body>
+</html>

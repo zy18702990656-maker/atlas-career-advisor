@@ -47,12 +47,13 @@ async function kvGetJSON(kv, key, def) {
 }
 
 // 把 referrer 归类成「渠道」——中文可读
-function classifySource(ref, utm) {
+// 优先级：你带的推广标记(from) > referrer 来路 > User-Agent 里的 App 特征兜底
+function classifySource(ref, utm, ua) {
   const raw = String(utm || '').trim();
   const u = raw.toLowerCase();
-  // 优先用你自己带的推广标记（最准）
+  // ① 优先用你自己带的推广标记（最准，你发链接时标好的）
   if (raw) {
-    // 中文渠道名（来自 enter.html 落地页选择）直接原样保留，最干净
+    // 中文渠道名（来自生成器/enter 落地页选择）直接原样保留，最干净
     if (/[\u4e00-\u9fa5]/.test(raw)) return raw.slice(0, 16);
     // 英文标记做一次归一映射
     if (/(weixin|wechat|wx|moments|pyq)/.test(u)) return '微信';
@@ -62,24 +63,37 @@ function classifySource(ref, utm) {
     if (/(xhs|xiaohongshu|red)/.test(u)) return '小红书';
     if (/(zhihu)/.test(u)) return '知乎';
     if (/(bili)/.test(u)) return 'B站';
+    if (/(friend|share|tuijian)/.test(u)) return '朋友推荐';
     return '推广:' + u.slice(0, 16);
   }
+  // ② 用 referrer 来路判断（搜索引擎、网页版社交等会规矩地传）
   const r = String(ref || '').toLowerCase();
-  if (!r) return '直接访问';                                    // 直接输网址/收藏夹/APP内点开
-  if (/mp\.weixin|weixin|wechat|servicewechat/.test(r)) return '微信';
-  if (/qq\.com|qzone/.test(r)) return 'QQ';
-  if (/weibo\./.test(r)) return '微博';
-  if (/zhihu\./.test(r)) return '知乎';
-  if (/xiaohongshu|xhslink/.test(r)) return '小红书';
-  if (/douyin|tiktok/.test(r)) return '抖音';
-  if (/bilibili|b23\.tv/.test(r)) return 'B站';
-  if (/baidu\./.test(r)) return '百度搜索';
-  if (/google\./.test(r)) return '谷歌搜索';
-  if (/bing\./.test(r)) return '必应搜索';
-  if (/so\.com|sogou/.test(r)) return '360/搜狗';
-  if (/github\./.test(r)) return 'GitHub';
-  // 其它站点：取域名
-  try { return '其它:' + new URL(ref).hostname.replace(/^www\./, '').slice(0, 20); } catch { return '其它站点'; }
+  if (r) {
+    if (/mp\.weixin|weixin|wechat|servicewechat/.test(r)) return '微信';
+    if (/qq\.com|qzone/.test(r)) return 'QQ';
+    if (/weibo\./.test(r)) return '微博';
+    if (/zhihu\./.test(r)) return '知乎';
+    if (/xiaohongshu|xhslink/.test(r)) return '小红书';
+    if (/douyin|tiktok/.test(r)) return '抖音';
+    if (/bilibili|b23\.tv/.test(r)) return 'B站';
+    if (/baidu\./.test(r)) return '百度搜索';
+    if (/google\./.test(r)) return '谷歌搜索';
+    if (/bing\./.test(r)) return '必应搜索';
+    if (/so\.com|sogou/.test(r)) return '360/搜狗';
+    if (/github\./.test(r)) return 'GitHub';
+    // 其它站点：取域名
+    try { return '其它:' + new URL(ref).hostname.replace(/^www\./, '').slice(0, 20); } catch { return '其它站点'; }
+  }
+  // ③ referrer 为空时（微信/QQ 等 App 内点开的典型情况）——用 UA 里的 App 特征兜底
+  const s = String(ua || '').toLowerCase();
+  if (/micromessenger/.test(s)) return '微信';        // 微信内置浏览器特征
+  if (/\bqq\//.test(s) || /qzone/.test(s)) return 'QQ';
+  if (/weibo/.test(s)) return '微博';
+  if (/(aweme|bytedance|douyin)/.test(s)) return '抖音';
+  if (/xhs|xiaohongshu/.test(s)) return '小红书';
+  if (/bilibili/.test(s)) return 'B站';
+  // ④ 全都识别不出——归为直接访问（直接输网址/收藏夹/无来路 App）
+  return '直接访问';
 }
 
 // 从 User-Agent 粗略判断设备类型
@@ -152,8 +166,9 @@ export async function onRequest({ request, env }) {
       }
       // ---- 访客来源画像（仅按「新访客」统计一次，反映真实来源分布）----
       if (firstSeenToday) {
-        const source = classifySource(meta.ref, meta.utm);
-        const device = classifyDevice(request.headers.get('user-agent'));
+        const ua = request.headers.get('user-agent');
+        const source = classifySource(meta.ref, meta.utm, ua);
+        const device = classifyDevice(ua);
         const country = countryCN(request.cf && request.cf.country);
         const dims = await kvGetJSON(kv, 'dims', { source: {}, device: {}, country: {} });
         inc(dims.source, source);
